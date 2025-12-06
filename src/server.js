@@ -27,6 +27,9 @@ const io = socketio(server, {
   },
 });
 
+// Make io available in routes/controllers if needed
+app.set("io", io);
+
 // ==========================
 // 3) GLOBAL MIDDLEWARE
 // ==========================
@@ -54,6 +57,9 @@ app.use("/api/tickets", require("./routes/tickets"));
 app.use("/api/users", require("./routes/users"));
 app.use("/api/companies", require("./routes/companies"));
 app.use("/api/dashboard", require("./routes/dashboard"));
+
+// 🔥 Chat Messages Route (المطلوب إضافته)
+app.use("/api", require("./routes/messagesRoutes"));
 
 // HEALTH CHECK
 app.get("/api/health", (req, res) => {
@@ -85,6 +91,7 @@ io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
 
   socket.on("join-ticket", (ticketId) => {
+    console.log(`User joined ticket room: ${ticketId}`);
     socket.join(ticketId);
   });
 
@@ -93,7 +100,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send-message", (data) => {
-    io.to(data.ticketId).emit("new-message", data.message);
+    // data: { ticketId, message }
+    io.to(data.ticketId).emit("new-message", data);
   });
 
   socket.on("disconnect", () => {
